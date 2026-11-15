@@ -1,39 +1,28 @@
 name: Unity license test
 
-# Run by hand from the Actions tab, after the two secrets are added.
 on: workflow_dispatch
 
 jobs:
-  activate:
-    name: 1. Activate Unity with account only
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: game-ci/unity-activate@v3.0.0-beta.1
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          cliVersion: v0.1.61
-
   build:
-    name: 2. Build a test APK
-    needs: activate
+    name: Activate and build a test APK
     runs-on: ubuntu-latest
     steps:
       - name: Free disk space for the Unity image
         run: sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+
       - uses: actions/checkout@v4
-      - uses: game-ci/unity-builder@v4
+        with:
+          fetch-depth: 0
+
+      - uses: game-ci/cli@v0.1.61
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          targetPlatform: Android
-          buildMethod: CiBuild.Android
-          buildName: unity-test
-          allowDirtyBuild: true
+          args: build . --target-platform Android --build-method CiBuild.Android --build-name unity-test --allow-dirty-build
+
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: unity-test-apk
           path: build
