@@ -11,15 +11,22 @@ jobs:
         run: sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
 
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - uses: game-ci/cli@v0.1.61
+      - name: Install GameCI CLI
+        run: curl -fsSL https://raw.githubusercontent.com/game-ci/cli/main/install.sh | sudo sh
+
+      - name: Activate Unity and build APK
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          args: build . --target-platform Android --build-method CiBuild.Android --build-name unity-test --allow-dirty-build
+        run: |
+          game-ci build . \
+            --target-platform Android \
+            --build-method CiBuild.Android \
+            --build-name unity-test \
+            --allow-dirty-build \
+            --unity-email "$UNITY_EMAIL" \
+            --unity-password "$UNITY_PASSWORD"
 
       - uses: actions/upload-artifact@v4
         if: always()
